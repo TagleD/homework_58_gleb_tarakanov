@@ -2,7 +2,7 @@
 
 
 1) Закрытые задачи за последний месяц от текущей даты (вхождение определяйте по дате последнего обновления).
-
+from datetime import datetime, timedelta
 Task.objects.filter(status=3, updated_at__gt=str((datetime.now() - timedelta(days=30)).date()))
 
 Сам запрос:
