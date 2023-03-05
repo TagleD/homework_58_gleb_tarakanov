@@ -1,0 +1,61 @@
+
+
+
+1) Закрытые задачи за последний месяц от текущей даты (вхождение определяйте по дате последнего обновления).
+
+Task.objects.filter(status=3, updated_at__gt=str((datetime.now() - timedelta(days=30)).date()))
+
+Сам запрос:
+# 'SELECT "webapp_task"."id", "webapp_task"."title", "webapp_task"."description", "webapp_task"."status_id", "webapp_task"."created_at", "webapp_task"."updated_at" FROM "webapp_task" WHERE ("webapp_task"."status_id" = 3 AND "webapp_task"."updated_at" > 2023-02-03 00:00:00+00:00)'
+
+2) Задачи, имеющие один из указанных статусов И один из указанных типов
+(в запросе укажите 2 любых названия типа и 2 названия статуса, которые есть в вашей базе).
+
+Task.objects.filter(type__in=[1, 2], status__in=[2, 3])
+
+Сам запрос:
+'SELECT "webapp_task"."id", "webapp_task"."title", "webapp_task"."description", "webapp_task"."status_id", "webapp_task"."created_at", "webapp_task"."updated_at" FROM "webapp_task" INNER JOIN "webapp_task_type" ON ("webapp_task"."id" = "webapp_task_type"."task_id") WHERE ("webapp_task"."status_id" IN (2, 3) AND "webapp_task_type"."type_id" IN (1, 2))'
+
+
+3)Задачи, в названии которых содержится слово "bug" в любом регистре или относящиеся
+к типу "Баг", имеющие НЕ закрытый статус
+
+Task.objects.filter(title__icontains='bug') | Task.objects.filter(type=2).exclude(status=3)
+
+Сам запрос:
+'SELECT "webapp_task"."id", "webapp_task"."title", "webapp_task"."description", "webapp_task"."status_id", "webapp_task"."created_at", "webapp_task"."updated_at" FROM "webapp_task" LEFT OUTER JOIN "webapp_task_type" ON ("webapp_task"."id" = "webapp_task_type"."task_id") WHERE (UPPER("webapp_task"."title"::text) LIKE UPPER(%bug%) OR ("webapp_task_type"."type_id" = 2 AND NOT ("webapp_task"."status_id" = 3)))'
+
+
+Бонусы (по +0.1 балла за каждый запрос):
+1) Для всех задач только следующие поля: id, название задачи, название типа и название статуса.
+Task.objects.values('id', 'title', 'type__name', 'status__name')
+
+Сам запрос:
+'SELECT "webapp_task"."id", "webapp_task"."title", "webapp_type"."name", "webapp_status"."name" FROM "webapp_task" LEFT OUTER JOIN "webapp_task_type" ON ("webapp_task"."id" = "webapp_task_type"."task_id") LEFT OUTER JOIN "webapp_type" ON ("webapp_task_type"."type_id" = "webapp_type"."id") INNER JOIN "webapp_status" ON ("webapp_task"."status_id" = "webapp_status"."id")'
+
+
+2)Задачи, где краткое описание совпадает с полным.
+Так как в данной работе нет краткого описания, то в данном запросе я поменял краткое описание на
+title
+from django.db.models import F
+Task.objects.filter(title=F('description'))
+
+Сам запрос:
+'SELECT "webapp_task"."id", "webapp_task"."title", "webapp_task"."description", "webapp_task"."status_id", "webapp_task"."created_at", "webapp_task"."updated_at" FROM "webapp_task" WHERE "webapp_task"."title" = ("webapp_task"."description")'
+
+3)Количество задач по каждому типу.
+from django.db.models import Count
+Task.objects.values('type__name').annotate(Count('type'))
+
+Сам запрос:
+'SELECT "webapp_type"."name", COUNT("webapp_task_type"."type_id") AS "type__count" FROM "webapp_task" LEFT OUTER JOIN "webapp_task_type" ON ("webapp_task"."id" = "webapp_task_type"."task_id") LEFT OUTER JOIN "webapp_type" ON ("webapp_task_type"."type_id" = "webapp_type"."id") GROUP BY "webapp_type"."name"'
+
+
+
+
+
+
+
+
+
+

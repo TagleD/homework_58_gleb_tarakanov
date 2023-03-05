@@ -7,7 +7,7 @@ from webapp.models import Task
 
 
 class CustomLengthValidator(BaseValidator):
-    def __init__(self, limit_value=20):
+    def __init__(self, limit_value=30):
         message = ('Максимальная длина заголовка %(limit_value)s. Вы ввели %(show_value)s символов.')
         super().__init__(limit_value=limit_value, message=message)
 
